@@ -25,6 +25,7 @@ COPY app/ ./app/
 COPY frontend/ ./frontend/
 COPY ui/ ./ui/
 COPY data/ ./data/
+COPY streamlit_app.py ./streamlit_app.py
 COPY .env.example ./.env.example
 
 # Expose ports: 8000 (FastAPI) and 8501 (Streamlit)

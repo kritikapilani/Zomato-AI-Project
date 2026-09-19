@@ -13,6 +13,15 @@ workspace_root = os.path.abspath(os.path.join(current_dir, ".."))
 if workspace_root not in sys.path:
     sys.path.insert(0, workspace_root)
 
+# Bridge Streamlit Cloud secrets into environment variables
+try:
+    if hasattr(st, "secrets"):
+        for key, val in st.secrets.items():
+            if isinstance(val, str) and key not in os.environ:
+                os.environ[key] = val
+except Exception:
+    pass
+
 from app.config import get_settings
 from app.models.preferences import BudgetTier, UserPreferences
 from app.models.response import Recommendation, RecommendationResponse

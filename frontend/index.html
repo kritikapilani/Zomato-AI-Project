@@ -111,26 +111,15 @@
       <span class="bg-primary text-white text-xs font-semibold px-3.5 py-1.5 rounded-full shadow-sm flex items-center gap-1.5">
         <span class="material-symbols-outlined text-[14px] icon-fill">auto_awesome</span> Recommendations
       </span>
-      <a href="https://kritikapilani-zomato-ai-project-streamlit-app-iqjacc.streamlit.app" target="_blank" class="inline-flex items-center gap-1.5 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 text-xs font-semibold px-3 py-1.5 rounded-full transition-all">
-        <span class="material-symbols-outlined text-[14px] icon-fill">rocket_launch</span>
-        Launch Streamlit App
-        <span class="material-symbols-outlined text-[12px]">open_in_new</span>
-      </a>
-      <a id="apiDocsLink" class="text-on-surface-variant hover:text-on-surface text-xs font-medium px-3 py-1.5 transition-colors" href="/docs" target="_blank">API Docs</a>
-      <a id="healthStatusLink" class="text-on-surface-variant hover:text-on-surface text-xs font-medium px-3 py-1.5 transition-colors" href="/health" target="_blank">Health Status</a>
+      <a id="apiDocsLink" class="text-on-surface-variant hover:text-on-surface text-xs font-medium px-3 py-1.5 transition-colors" href="https://zomato-ai-project.onrender.com/docs" target="_blank">API Docs</a>
+      <a id="healthStatusLink" class="text-on-surface-variant hover:text-on-surface text-xs font-medium px-3 py-1.5 transition-colors" href="https://zomato-ai-project.onrender.com/health" target="_blank">Health Status</a>
     </nav>
 
     <div class="flex items-center gap-2 sm:gap-3">
-      <!-- Streamlit Embed Button -->
-      <button onclick="openStreamlitModal()" type="button" class="inline-flex items-center gap-1.5 bg-primary text-white hover:bg-primary-container px-3 py-1.5 rounded-full shadow-xs text-xs font-semibold transition-all cursor-pointer">
-        <span class="material-symbols-outlined text-[14px]">desktop_windows</span>
-        <span class="hidden sm:inline">Streamlit Engine</span>
-      </button>
-
-      <!-- Railway / Backend Connection Pill -->
+      <!-- Backend Connection Pill -->
       <button id="backendConfigBtn" onclick="openBackendModal()" type="button" title="Configure Backend API Server" class="inline-flex items-center gap-1.5 bg-surface-container/80 hover:bg-surface-container border border-outline-variant/30 hover:border-primary/40 px-2.5 py-1.5 rounded-full shadow-2xs text-xs font-medium text-on-surface hover:text-primary transition-all cursor-pointer">
         <span id="backendStatusDot" class="w-2 h-2 rounded-full bg-emerald-500 shrink-0 shadow-xs"></span>
-        <span id="backendStatusText" class="text-[11px] hidden sm:inline font-mono">Backend</span>
+        <span id="backendStatusText" class="text-[11px] hidden sm:inline font-mono">Render Backend</span>
         <span class="material-symbols-outlined text-[14px] text-on-surface-variant">tune</span>
       </button>
 
@@ -146,24 +135,17 @@
   </div>
 </header>
 
-<!-- Live Streamlit Notification Banner -->
-<div class="bg-gradient-to-r from-red-50 via-rose-50 to-orange-50 border-b border-red-100 py-2.5 px-4 shadow-xs">
-  <div class="max-w-[1240px] mx-auto flex flex-wrap items-center justify-between gap-3 text-xs">
-    <div class="flex items-center gap-2 text-on-surface">
-      <span class="material-symbols-outlined text-primary text-[18px] shrink-0 icon-fill">verified</span>
-      <span>
-        <strong class="text-primary font-semibold">Live AI Backend Deployed:</strong> Streamlit Cloud engine is running with 12,519 restaurants & Groq LLaMA 3.3.
-      </span>
+<!-- Live Notification Alert Banner -->
+<div class="bg-surface-container-low/95 border-b border-surface-container-high py-2 px-4 shadow-xs">
+  <div class="max-w-[1240px] mx-auto flex items-center justify-between gap-3 text-xs">
+    <div class="flex items-center gap-2">
+      <span class="material-symbols-outlined text-primary text-[18px] shrink-0 icon-fill">bolt</span>
+      <p class="text-on-surface">
+        <strong class="text-primary font-semibold">Real-Time Dining Intelligence:</strong> 12,519 verified Bangalore restaurants scanned with Groq-accelerated reasoning (<code class="bg-surface-container px-1 py-0.5 rounded text-[11px] font-mono text-primary">openai/gpt-oss-120b</code>).
+      </p>
     </div>
     <div class="flex items-center gap-2">
-      <button onclick="openStreamlitModal()" type="button" class="inline-flex items-center gap-1 bg-white border border-outline-variant/40 hover:bg-surface text-on-surface font-medium px-2.5 py-1 rounded-md text-xs shadow-2xs transition-all cursor-pointer">
-        <span class="material-symbols-outlined text-[14px] text-primary">visibility</span>
-        View Embedded
-      </button>
-      <a href="https://kritikapilani-zomato-ai-project-streamlit-app-iqjacc.streamlit.app" target="_blank" class="inline-flex items-center gap-1 bg-primary text-white hover:bg-primary-container font-semibold px-3 py-1 rounded-md text-xs shadow-xs transition-all">
-        Open Full App
-        <span class="material-symbols-outlined text-[13px]">open_in_new</span>
-      </a>
+      <span class="text-on-surface-variant text-[11px] hidden md:inline">100% Grounded in Zomato Data</span>
     </div>
   </div>
 </div>
@@ -1040,39 +1022,6 @@
     </div>
   </div>
 </div>
-
-<!-- Embedded Streamlit Cloud App Modal -->
-<div id="streamlitModal" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4">
-  <div class="bg-surface-container-lowest w-full max-w-6xl h-[92vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-outline-variant/30">
-    <div class="px-4 py-3 bg-surface border-b border-surface-container-high flex items-center justify-between">
-      <div class="flex items-center gap-2">
-        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-        <span class="font-bold text-sm text-on-surface">Zomato AI Engine — Live Streamlit Cloud</span>
-        <span class="text-[11px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-semibold hidden sm:inline">12,519 Spots • Groq LLaMA 3.3</span>
-      </div>
-      <div class="flex items-center gap-3">
-        <a href="https://kritikapilani-zomato-ai-project-streamlit-app-iqjacc.streamlit.app" target="_blank" class="text-xs text-primary font-semibold flex items-center gap-1 hover:underline">
-          Full Screen <span class="material-symbols-outlined text-[13px]">open_in_new</span>
-        </a>
-        <button onclick="closeStreamlitModal()" type="button" class="w-7 h-7 rounded-full bg-surface-container hover:bg-surface-container-high flex items-center justify-center text-on-surface-variant font-bold cursor-pointer">✕</button>
-      </div>
-    </div>
-    <div class="flex-1 w-full bg-surface-container-low relative">
-      <iframe src="https://kritikapilani-zomato-ai-project-streamlit-app-iqjacc.streamlit.app/?embed=true" class="w-full h-full border-0" allow="geolocation; microphone; camera; midi; encrypted-media"></iframe>
-    </div>
-  </div>
-</div>
-
-<script>
-  function openStreamlitModal() {
-    const modal = document.getElementById("streamlitModal");
-    if (modal) modal.classList.remove("hidden");
-  }
-  function closeStreamlitModal() {
-    const modal = document.getElementById("streamlitModal");
-    if (modal) modal.classList.add("hidden");
-  }
-</script>
 
 </body>
 </html>

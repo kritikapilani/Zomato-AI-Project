@@ -7,15 +7,17 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from app import __version__
-from app.api.dependencies import get_loader
 from app.api.routes import router
+from app.config import get_settings
+from app.services.dataset_loader import get_dataset_loader
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Pre-warm dataset cache into memory on server boot
     try:
-        loader = get_loader()
+        settings = get_settings()
+        loader = get_dataset_loader(settings)
         loader.load()
     except Exception as exc:
         import logging

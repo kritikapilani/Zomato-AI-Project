@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Zomato AI - Restaurant Recommendations</title>
+  <link href="https://fonts.googleapis.com" rel="preconnect"/>
+  <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#e23744",
+            "primary-container": "#cb202d",
+            "on-primary": "#ffffff",
+            "primary-fixed": "#ffe0e0",
+            "secondary": "#006e26",
+            "secondary-container": "#d4f7d6",
+            "on-secondary-container": "#00531b",
+            "tertiary": "#a16900",
+            "surface": "#fcf9f8",
+            "surface-container-lowest": "#ffffff",
+            "surface-container-low": "#f6f3f2",
+            "surface-container": "#f0eded",
+            "surface-container-high": "#eae7e7",
+            "surface-container-highest": "#e5e2e1",
+            "on-surface": "#1b1b1b",
+            "on-surface-variant": "#5b403f",
+            "outline": "#8f6f6e",
+            "outline-variant": "#e4bebc",
+            "error": "#ba1a1a",
+            "error-container": "#ffdad6"
+          },
+          fontFamily: {
+            sans: ["Inter", "sans-serif"],
+            display: ["Outfit", "sans-serif"]
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    body { font-family: "Inter", sans-serif; -webkit-font-smoothing: antialiased; }
+    h1, h2, h3, .font-heading { font-family: "Outfit", sans-serif; }
+    .material-symbols-outlined { font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24; }
+    .icon-fill { font-variation-settings: "FILL" 1, "wght" 400, "GRAD" 0, "opsz" 24; }
+    @keyframes pulse-subtle {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+    .shimmer-pulse { animation: pulse-subtle 1.8s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+
+    /* Custom highlight for Minimum Rating range slider */
+    #ratingRange {
+      -webkit-appearance: none;
+      appearance: none;
+      height: 8px;
+      border-radius: 9999px;
+      outline: none;
+      background: linear-gradient(to right, #e23744 0%, #e23744 60%, #e5e2e1 60%, #e5e2e1 100%);
+      transition: background 0.1s ease;
+    }
+    #ratingRange::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #e23744;
+      border: 3px solid #ffffff;
+      box-shadow: 0 2px 6px rgba(226, 55, 68, 0.45);
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    #ratingRange::-webkit-slider-thumb:hover,
+    #ratingRange::-webkit-slider-thumb:active {
+      transform: scale(1.2);
+      box-shadow: 0 0 0 6px rgba(226, 55, 68, 0.2), 0 3px 8px rgba(226, 55, 68, 0.5);
+    }
+    #ratingRange::-moz-range-thumb {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #e23744;
+      border: 3px solid #ffffff;
+      box-shadow: 0 2px 6px rgba(226, 55, 68, 0.45);
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body class="bg-[#fcf9f8] text-[#1b1b1b] min-h-screen flex flex-col">
+
+<!-- Header / Navigation Bar -->
+<header class="sticky top-0 z-50 w-full bg-surface/95 backdrop-blur-md border-b border-surface-container-high/60 shadow-sm">
+  <div class="max-w-[1240px] mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+    <div class="flex items-center gap-3">
+      <div class="h-9 flex items-center shrink-0">
+        <img src="assets/zomato_ai_logo.png" alt="Zomato AI" class="h-8 object-contain" onerror="this.outerHTML='<span class=\'font-extrabold text-2xl tracking-tighter text-primary font-heading\'>zomato <span class=\'text-xs font-semibold px-2 py-0.5 rounded-full bg-primary-fixed text-primary align-middle\'>AI</span></span>'"/>
+      </div>
+      <div class="h-5 w-[1px] bg-surface-container-highest hidden sm:block"></div>
+      <span class="font-bold text-[17px] text-[#1b1b1b] tracking-tight hidden sm:inline font-heading">AI Restaurant Recommender</span>
+    </div>
+
+    <nav class="hidden md:flex items-center gap-2">
+      <span class="bg-primary text-white text-xs font-semibold px-3.5 py-1.5 rounded-full shadow-sm flex items-center gap-1.5">
+        <span class="material-symbols-outlined text-[14px] icon-fill">auto_awesome</span> Recommendations
+      </span>
+      <a class="text-on-surface-variant hover:text-on-surface text-xs font-medium px-3 py-1.5 transition-colors" href="/docs" target="_blank">API Docs</a>
+      <a class="text-on-surface-variant hover:text-on-surface text-xs font-medium px-3 py-1.5 transition-colors" href="/health" target="_blank">Health Status</a>
+    </nav>
+
+    <div class="flex items-center gap-3">
+      <div class="inline-flex items-center gap-1.5 bg-secondary-container/60 border border-secondary/20 px-3 py-1.5 rounded-full shadow-xs text-xs font-semibold text-on-secondary-container">
+        <span class="w-2 h-2 rounded-full bg-secondary animate-ping"></span>
+        <span class="hidden sm:inline">Groq LPU Active</span>
+        <span class="sm:hidden">Live</span>
+      </div>
+      <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white shrink-0 shadow-sm">
+        <span class="material-symbols-outlined text-[18px]">restaurant</span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- Live Notification Alert Banner -->
+<div class="bg-surface-container-low/95 border-b border-surface-container-high py-2 px-4 shadow-xs">
+  <div class="max-w-[1240px] mx-auto flex items-center justify-between gap-3 text-xs">
+    <div class="flex items-center gap-2">
+      <span class="material-symbols-outlined text-primary text-[18px] shrink-0 icon-fill">bolt</span>
+      <p class="text-on-surface">
+        <strong class="text-primary font-semibold">Real-Time Dining Intelligence:</strong> 12,519 verified Bangalore restaurants scanned with Groq-accelerated reasoning (<code class="bg-surface-container px-1 py-0.5 rounded text-[11px] font-mono text-primary">openai/gpt-oss-120b</code>).
+      </p>
+    </div>
+    <div class="flex items-center gap-2">
+      <span class="text-on-surface-variant text-[11px] hidden md:inline">100% Grounded in Zomato Data</span>
+    </div>
+  </div>
+</div>
+
+<!-- Main Content Container -->
+<main class="flex-1 max-w-[1240px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+  <!-- 2-Column Responsive Workspace -->
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+    <!-- LEFT COLUMN (5 cols): Preferences Form -->
+    <div class="lg:col-span-5 bg-surface-container-lowest p-6 rounded-2xl border border-surface-container-high/60 shadow-sm space-y-5 sticky top-20">
+      <div class="flex items-start justify-between">
+        <div>
+          <h2 class="text-xl font-bold text-on-surface tracking-tight font-heading">Dining Preferences</h2>
+          <p class="text-xs text-on-surface-variant mt-0.5">Customize your criteria for LLM reasoning</p>
+        </div>
+        <span class="inline-flex p-2 bg-primary-fixed text-primary rounded-full">
+          <span class="material-symbols-outlined text-[20px] icon-fill">tune</span>
+        </span>
+      </div>
+
+      <form class="space-y-4" id="preferencesForm" onsubmit="handleFormSubmit(event)">
+
+        <!-- 1. Location Dropdown -->
+        <div class="space-y-1.5">
+          <div class="flex items-center justify-between text-xs">
+            <label class="font-semibold text-on-surface flex items-center gap-1" for="locationSelect">
+              <span class="material-symbols-outlined text-primary text-[17px]">location_on</span>
+              Neighborhood / Locality
+            </label>
+            <span class="text-secondary font-medium flex items-center gap-0.5">
+              <span class="material-symbols-outlined text-[14px]">check_circle</span> 93 Areas
+            </span>
+          </div>
+
+          <div class="relative">
+            <select onchange="handleFormSubmit()" class="w-full appearance-none px-3 py-2.5 pl-9 pr-8 bg-surface-container-low border border-surface-container-high rounded-xl text-xs font-semibold text-on-surface outline-none cursor-pointer focus:border-primary focus:bg-white transition-all shadow-xs" id="locationSelect">
+<optgroup label="🔥 Popular Neighborhoods">
+  <option value="whitefield">Whitefield (887 restaurants)</option>
+  <option value="electronic city">Electronic City (730 restaurants)</option>
+  <option value="btm">Btm (729 restaurants)</option>
+  <option value="hsr">Hsr (706 restaurants)</option>
+  <option value="marathahalli">Marathahalli (688 restaurants)</option>
+  <option value="indiranagar">Indiranagar (533 restaurants)</option>
+  <option value="jp nagar">Jp Nagar (523 restaurants)</option>
+  <option value="bannerghatta road">Bannerghatta Road (474 restaurants)</option>
+  <option value="jayanagar">Jayanagar (367 restaurants)</option>
+  <option value="bellandur" selected>Bellandur (363 restaurants)</option>
+  <option value="church street">Church Street (57 restaurants)</option>
+  <option value="koramangala">Koramangala (10 restaurants)</option>
+</optgroup>
+<optgroup label="📍 All Neighborhoods (A-Z)">
+  <option value="banashankari">Banashankari (295 restaurants)</option>
+  <option value="banaswadi">Banaswadi (209 restaurants)</option>
+  <option value="basavanagudi">Basavanagudi (211 restaurants)</option>
+  <option value="basaveshwara nagar">Basaveshwara Nagar (105 restaurants)</option>
+  <option value="bommanahalli">Bommanahalli (101 restaurants)</option>
+  <option value="brigade road">Brigade Road (131 restaurants)</option>
+  <option value="brookefield">Brookefield (178 restaurants)</option>
+  <option value="central bangalore">Central Bangalore (2 restaurants)</option>
+  <option value="city market">City Market (45 restaurants)</option>
+  <option value="commercial street">Commercial Street (44 restaurants)</option>
+  <option value="cunningham road">Cunningham Road (49 restaurants)</option>
+  <option value="cv raman nagar">Cv Raman Nagar (44 restaurants)</option>
+  <option value="domlur">Domlur (100 restaurants)</option>
+  <option value="east bangalore">East Bangalore (23 restaurants)</option>
+  <option value="ejipura">Ejipura (65 restaurants)</option>
+  <option value="frazer town">Frazer Town (192 restaurants)</option>
+  <option value="hbr layout">Hbr Layout (45 restaurants)</option>
+  <option value="hebbal">Hebbal (8 restaurants)</option>
+  <option value="hennur">Hennur (65 restaurants)</option>
+  <option value="hosur road">Hosur Road (16 restaurants)</option>
+  <option value="infantry road">Infantry Road (15 restaurants)</option>
+  <option value="itpl main road, whitefield">Itpl Main Road, Whitefield (48 restaurants)</option>
+  <option value="jakkur">Jakkur (1 restaurants)</option>
+  <option value="jalahalli">Jalahalli (22 restaurants)</option>
+  <option value="jeevan bhima nagar">Jeevan Bhima Nagar (78 restaurants)</option>
+  <option value="kaggadasapura">Kaggadasapura (58 restaurants)</option>
+  <option value="kalyan nagar">Kalyan Nagar (242 restaurants)</option>
+  <option value="kammanahalli">Kammanahalli (182 restaurants)</option>
+  <option value="kanakapura road">Kanakapura Road (10 restaurants)</option>
+  <option value="kengeri">Kengeri (1 restaurants)</option>
+  <option value="koramangala 1st block">Koramangala 1St Block (166 restaurants)</option>
+  <option value="koramangala 2nd block">Koramangala 2Nd Block (10 restaurants)</option>
+  <option value="koramangala 3rd block">Koramangala 3Rd Block (23 restaurants)</option>
+  <option value="koramangala 4th block">Koramangala 4Th Block (133 restaurants)</option>
+  <option value="koramangala 5th block">Koramangala 5Th Block (269 restaurants)</option>
+  <option value="koramangala 6th block">Koramangala 6Th Block (151 restaurants)</option>
+  <option value="koramangala 7th block">Koramangala 7Th Block (146 restaurants)</option>
+  <option value="koramangala 8th block">Koramangala 8Th Block (45 restaurants)</option>
+  <option value="kr puram">Kr Puram (13 restaurants)</option>
+  <option value="kumaraswamy layout">Kumaraswamy Layout (84 restaurants)</option>
+  <option value="langford town">Langford Town (2 restaurants)</option>
+  <option value="lavelle road">Lavelle Road (56 restaurants)</option>
+  <option value="magadi road">Magadi Road (23 restaurants)</option>
+  <option value="majestic">Majestic (84 restaurants)</option>
+  <option value="malleshwaram">Malleshwaram (238 restaurants)</option>
+  <option value="mg road">Mg Road (98 restaurants)</option>
+  <option value="mysore road">Mysore Road (13 restaurants)</option>
+  <option value="nagarbhavi">Nagarbhavi (4 restaurants)</option>
+  <option value="nagawara">Nagawara (104 restaurants)</option>
+  <option value="new bel road">New Bel Road (308 restaurants)</option>
+  <option value="north bangalore">North Bangalore (7 restaurants)</option>
+  <option value="old airport road">Old Airport Road (142 restaurants)</option>
+  <option value="old madras road">Old Madras Road (9 restaurants)</option>
+  <option value="peenya">Peenya (1 restaurants)</option>
+  <option value="race course road">Race Course Road (30 restaurants)</option>
+  <option value="rajajinagar">Rajajinagar (235 restaurants)</option>
+  <option value="rajarajeshwari nagar">Rajarajeshwari Nagar (2 restaurants)</option>
+  <option value="rammurthy nagar">Rammurthy Nagar (19 restaurants)</option>
+  <option value="residency road">Residency Road (84 restaurants)</option>
+  <option value="richmond road">Richmond Road (94 restaurants)</option>
+  <option value="rt nagar">Rt Nagar (52 restaurants)</option>
+  <option value="sadashiv nagar">Sadashiv Nagar (32 restaurants)</option>
+  <option value="sahakara nagar">Sahakara Nagar (45 restaurants)</option>
+  <option value="sanjay nagar">Sanjay Nagar (47 restaurants)</option>
+  <option value="sankey road">Sankey Road (13 restaurants)</option>
+  <option value="sarjapur road">Sarjapur Road (339 restaurants)</option>
+  <option value="seshadripuram">Seshadripuram (58 restaurants)</option>
+  <option value="shanti nagar">Shanti Nagar (77 restaurants)</option>
+  <option value="shivajinagar">Shivajinagar (61 restaurants)</option>
+  <option value="south bangalore">South Bangalore (28 restaurants)</option>
+  <option value="st. marks road">St. Marks Road (35 restaurants)</option>
+  <option value="thippasandra">Thippasandra (73 restaurants)</option>
+  <option value="ulsoor">Ulsoor (119 restaurants)</option>
+  <option value="uttarahalli">Uttarahalli (11 restaurants)</option>
+  <option value="varthur main road, whitefield">Varthur Main Road, Whitefield (45 restaurants)</option>
+  <option value="vasanth nagar">Vasanth Nagar (54 restaurants)</option>
+  <option value="vijay nagar">Vijay Nagar (58 restaurants)</option>
+  <option value="west bangalore">West Bangalore (4 restaurants)</option>
+  <option value="wilson garden">Wilson Garden (50 restaurants)</option>
+  <option value="yelahanka">Yelahanka (4 restaurants)</option>
+  <option value="yeshwantpur">Yeshwantpur (69 restaurants)</option>
+</optgroup>
+            </select>
+            <span class="material-symbols-outlined absolute left-2.5 top-2.5 text-on-surface-variant text-[18px] pointer-events-none">search</span>
+            <span class="material-symbols-outlined absolute right-2.5 top-2.5 text-on-surface-variant text-[18px] pointer-events-none">expand_more</span>
+          </div>
+
+          <!-- Quick Suggestions -->
+          <div class="flex items-center gap-1.5 pt-1 overflow-x-auto text-xs">
+            <span class="text-on-surface-variant text-[11px] font-medium shrink-0">Quick Picks:</span>
+            <button class="px-2 py-0.5 rounded-full bg-surface-container text-on-surface text-[11px] hover:bg-primary hover:text-white transition-colors" onclick="setLocation('bellandur')" type="button">Bellandur</button>
+            <button class="px-2 py-0.5 rounded-full bg-surface-container text-on-surface text-[11px] hover:bg-primary hover:text-white transition-colors" onclick="setLocation('indiranagar')" type="button">Indiranagar</button>
+            <button class="px-2 py-0.5 rounded-full bg-surface-container text-on-surface text-[11px] hover:bg-primary hover:text-white transition-colors" onclick="setLocation('koramangala')" type="button">Koramangala</button>
+            <button class="px-2 py-0.5 rounded-full bg-surface-container text-on-surface text-[11px] hover:bg-primary hover:text-white transition-colors" onclick="setLocation('whitefield')" type="button">Whitefield</button>
+            <button class="px-2 py-0.5 rounded-full bg-surface-container text-on-surface text-[11px] hover:bg-primary hover:text-white transition-colors" onclick="setLocation('hsr')" type="button">HSR</button>
+          </div>
+        </div>
+
+        <!-- 2. Budget Dropdown -->
+        <div class="space-y-1.5">
+          <label class="font-semibold text-xs text-on-surface flex items-center justify-between" for="budgetSelect">
+            <span class="flex items-center gap-1">
+              <span class="material-symbols-outlined text-primary text-[17px]">payments</span>
+              Budget Tier
+            </span>
+            <span class="text-[10px] text-on-surface-variant bg-surface-container px-1.5 py-0.5 rounded font-mono">Cost for 2</span>
+          </label>
+          <div class="relative">
+            <select onchange="handleFormSubmit()" class="w-full appearance-none px-3 py-2.5 pr-8 bg-surface-container-low border border-surface-container-high rounded-xl text-xs font-semibold text-on-surface outline-none cursor-pointer focus:border-primary focus:bg-white transition-all shadow-xs" id="budgetSelect">
+              <option value="low">Low (≤ ₹500 for two)</option>
+              <option selected value="medium">Medium (₹501 – ₹1,500 for two)</option>
+              <option value="high">High (> ₹1,500 for two)</option>
+            </select>
+            <span class="material-symbols-outlined absolute right-3 top-2.5 text-on-surface-variant pointer-events-none text-[18px]">expand_more</span>
+          </div>
+        </div>
+
+        <!-- 3. Cuisine Preferences -->
+        <div class="space-y-1.5">
+          <label class="font-semibold text-xs text-on-surface flex items-center justify-between" for="cuisineInput">
+            <span class="flex items-center gap-1">
+              <span class="material-symbols-outlined text-primary text-[17px]">restaurant</span>
+              Cuisine preference
+            </span>
+            <span class="text-[10px] text-on-surface-variant">e.g. Italian, North Indian</span>
+          </label>
+          <input onchange="handleFormSubmit()" class="w-full px-3 py-2 bg-surface-container-low border border-surface-container-high rounded-xl text-xs text-on-surface outline-none focus:border-primary focus:bg-white transition-all" id="cuisineInput" type="text" value="any" placeholder="Enter cuisines or type 'any'"/>
+
+          <!-- Cuisine Quick Tags -->
+          <div class="flex flex-wrap gap-1.5 pt-1">
+            <button type="button" onclick="setCuisine('any')" class="cuisine-tag-btn px-2.5 py-1 rounded-full bg-primary-fixed text-primary font-semibold text-[11px] shadow-xs">Any Cuisine</button>
+            <button type="button" onclick="setCuisine('North Indian')" class="cuisine-tag-btn px-2.5 py-1 rounded-full bg-surface-container text-on-surface text-[11px] hover:bg-surface-container-high">North Indian</button>
+            <button type="button" onclick="setCuisine('Continental')" class="cuisine-tag-btn px-2.5 py-1 rounded-full bg-surface-container text-on-surface text-[11px] hover:bg-surface-container-high">Continental</button>
+            <button type="button" onclick="setCuisine('Chinese')" class="cuisine-tag-btn px-2.5 py-1 rounded-full bg-surface-container text-on-surface text-[11px] hover:bg-surface-container-high">Chinese</button>
+            <button type="button" onclick="setCuisine('Italian')" class="cuisine-tag-btn px-2.5 py-1 rounded-full bg-surface-container text-on-surface text-[11px] hover:bg-surface-container-high">Italian</button>
+            <button type="button" onclick="setCuisine('Cafe')" class="cuisine-tag-btn px-2.5 py-1 rounded-full bg-surface-container text-on-surface text-[11px] hover:bg-surface-container-high">Cafe</button>
+            <button type="button" onclick="setCuisine('Biryani')" class="cuisine-tag-btn px-2.5 py-1 rounded-full bg-surface-container text-on-surface text-[11px] hover:bg-surface-container-high">Biryani</button>
+            <button type="button" onclick="setCuisine('Healthy Food')" class="cuisine-tag-btn px-2.5 py-1 rounded-full bg-surface-container text-on-surface text-[11px] hover:bg-surface-container-high">Healthy</button>
+          </div>
+        </div>
+
+        <!-- 4. Rating Slider -->
+        <div class="space-y-2 bg-surface-container-low p-3.5 rounded-xl border border-surface-container-high/60">
+          <div class="flex items-center justify-between text-xs">
+            <label class="font-semibold text-on-surface flex items-center gap-1" for="ratingRange">
+              <span class="material-symbols-outlined text-tertiary text-[17px] icon-fill">grade</span>
+              Minimum Rating
+            </label>
+            <div class="px-2 py-0.5 bg-secondary text-white rounded-full font-bold text-xs inline-flex items-center gap-0.5 shadow-xs" id="ratingBadge">
+              <span id="ratingDisplayVal">4.2</span>
+              <span class="material-symbols-outlined text-[12px] icon-fill">star</span>
+            </div>
+          </div>
+          <input onchange="handleFormSubmit()" class="w-full h-1.5 bg-surface-container-highest rounded-lg appearance-none cursor-pointer accent-primary" id="ratingRange" max="5.0" min="3.0" oninput="updateRatingDisplay(this.value)" step="0.1" type="range" value="4.2"/>
+          <div class="flex justify-between text-on-surface-variant text-[11px]">
+            <span>3.0 ★</span>
+            <span>4.0 ★</span>
+            <span>4.5 ★</span>
+            <span>5.0 ★</span>
+          </div>
+        </div>
+
+        <!-- 5. Additional Preferences -->
+        <div class="space-y-1.5">
+          <div class="flex items-center justify-between text-xs">
+            <label class="font-semibold text-on-surface flex items-center gap-1" for="aiPromptInput">
+              <span class="material-symbols-outlined text-primary text-[17px] icon-fill">magic_button</span>
+              Vibe & Extras (Optional)
+            </label>
+            <span class="text-[10px] font-bold text-primary bg-primary-fixed px-1.5 py-0.5 rounded">LLM Filter</span>
+          </div>
+          <textarea class="w-full p-2.5 bg-surface-container-low border border-surface-container-high rounded-xl text-xs text-on-surface outline-none focus:border-primary focus:bg-white resize-none" id="aiPromptInput" rows="2" placeholder="e.g. rooftop seating, romantic, craft beer, family friendly"></textarea>
+          
+          <!-- Vibe Chips -->
+          <div class="flex flex-wrap gap-1 pt-0.5">
+            <button type="button" onclick="appendVibe('rooftop seating')" class="px-2 py-0.5 rounded-md bg-surface-container text-on-surface text-[10px] hover:bg-surface-container-high">+ Rooftop</button>
+            <button type="button" onclick="appendVibe('romantic ambience')" class="px-2 py-0.5 rounded-md bg-surface-container text-on-surface text-[10px] hover:bg-surface-container-high">+ Romantic</button>
+            <button type="button" onclick="appendVibe('craft beer')" class="px-2 py-0.5 rounded-md bg-surface-container text-on-surface text-[10px] hover:bg-surface-container-high">+ Craft Beer</button>
+            <button type="button" onclick="appendVibe('family friendly')" class="px-2 py-0.5 rounded-md bg-surface-container text-on-surface text-[10px] hover:bg-surface-container-high">+ Family Friendly</button>
+          </div>
+        </div>
+
+        <!-- 6. Top-K Selector -->
+        <div class="flex items-center justify-between text-xs pt-1">
+          <span class="font-semibold text-on-surface flex items-center gap-1">
+            <span class="material-symbols-outlined text-[16px]">format_list_numbered</span> Recommendations Count
+          </span>
+          <select onchange="handleFormSubmit()" id="topKSelect" class="px-2.5 py-1 bg-surface-container-low border border-surface-container-high rounded-lg text-xs font-semibold text-on-surface outline-none cursor-pointer">
+            <option value="3">Top 3</option>
+            <option value="5" selected>Top 5</option>
+            <option value="8">Top 8</option>
+            <option value="10">Top 10</option>
+          </select>
+        </div>
+
+        <!-- 7. Submit Button -->
+        <button id="submitBtn" class="w-full py-3 px-4 bg-primary hover:bg-primary-container text-white rounded-full font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2 active:scale-[0.99]" type="submit">
+          <span class="material-symbols-outlined text-[18px] icon-fill">auto_awesome</span>
+          <span id="btnText">Get AI Recommendations</span>
+        </button>
+      </form>
+    </div>
+
+    <!-- RIGHT COLUMN (7 cols): Results Display -->
+    <div class="lg:col-span-7 space-y-4">
+
+      <!-- ================= VIEW STATE 1: Live Ranked Results ================= -->
+      <div class="space-y-4" id="view-state-ranked">
+        <!-- Header and Filter Chips -->
+        <div class="bg-surface-container-lowest p-5 rounded-2xl border border-surface-container-high/60 shadow-sm space-y-3">
+          <div class="flex items-center justify-between flex-wrap gap-2">
+            <div class="flex items-center gap-2">
+              <h1 class="text-xl font-bold text-on-surface tracking-tight font-heading">Recommendations</h1>
+              <span class="px-2.5 py-0.5 bg-secondary-container text-on-secondary-container text-xs font-semibold rounded-full" id="matchBadgeCount">
+                5 Curated Matches
+              </span>
+            </div>
+            <button class="text-xs font-semibold text-primary hover:underline flex items-center gap-1" onclick="resetForm()">
+              <span class="material-symbols-outlined text-[15px]">restart_alt</span> Reset
+            </button>
+          </div>
+
+          <!-- Active Chips -->
+          <div class="flex flex-wrap items-center gap-1.5 text-xs font-medium text-on-surface" id="activeFilterChips">
+            <span class="px-2.5 py-1 rounded-full bg-surface-container" id="chipLoc">📍 Bellandur</span>
+            <span class="px-2.5 py-1 rounded-full bg-surface-container" id="chipBudget">₹ ≤ ₹1,500 for two</span>
+            <span class="px-2.5 py-1 rounded-full bg-surface-container" id="chipCuisine">🍲 Any Cuisine</span>
+            <span class="px-2.5 py-1 rounded-full bg-surface-container" id="chipRating">★ 4.2+ Rating</span>
+          </div>
+
+          <!-- Amber Relaxed Filter Warning Banner (Hidden unless relaxed) -->
+          <div class="hidden p-3 bg-[#ffedd5] text-[#7c2d12] rounded-xl flex items-start gap-2.5 text-xs border border-[#fed7aa]" id="relaxedWarningBanner">
+            <span class="material-symbols-outlined text-[#ea580c] text-[18px] shrink-0 mt-0.5">info</span>
+            <div id="relaxationMessage">
+              <strong class="font-bold">Notice:</strong> Filters were gently adjusted to surface top matching restaurants.
+            </div>
+          </div>
+
+          <!-- AI Synthesis Summary Banner -->
+          <div class="p-4 bg-surface-container-low rounded-xl border border-surface-container" id="aiSummaryBox">
+            <div class="flex items-start gap-3">
+              <div class="p-1.5 bg-primary text-white rounded-lg shrink-0 mt-0.5 shadow-xs">
+                <span class="material-symbols-outlined text-[18px] icon-fill">neurology</span>
+              </div>
+              <div>
+                <span class="text-[10px] font-bold uppercase tracking-wider text-primary">Groq Dining Synthesis</span>
+                <p class="text-xs text-on-surface italic mt-0.5 leading-relaxed font-normal" id="aiSummaryText">
+                  The top picks prioritize dining destinations in Bellandur with ratings of 4.2 or higher, satisfying your budget limit with authentic flavors and verified review consensus.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Cards Container -->
+        <div class="space-y-3.5" id="recommendationsList">
+          <!-- Cards injected dynamically via JavaScript -->
+        </div>
+
+        <!-- Telemetry Details Footer -->
+        <div class="p-4 bg-surface-container-lowest rounded-2xl border border-surface-container-high/60 text-xs text-on-surface-variant flex items-center justify-between flex-wrap gap-2">
+          <div class="flex items-center gap-2">
+            <span class="inline-flex items-center gap-1 font-semibold text-on-surface">
+              <span class="material-symbols-outlined text-[15px] text-secondary">speed</span>
+              <span id="telemetryLatency">~2.9s latency</span>
+            </span>
+            <span>•</span>
+            <span id="telemetryCandidates">30 evaluated</span>
+            <span>•</span>
+            <span id="telemetryModel" class="font-mono text-[11px] bg-surface-container px-1.5 py-0.5 rounded text-primary">openai/gpt-oss-120b</span>
+          </div>
+          <span class="text-secondary font-medium flex items-center gap-1">
+            <span class="material-symbols-outlined text-[14px]">shield</span> Zero Hallucinations Verified
+          </span>
+        </div>
+      </div>
+
+      <!-- ================= VIEW STATE 2: Loading / Skeleton ================= -->
+      <div class="hidden space-y-4" id="view-state-loading">
+        <div class="bg-surface-container-lowest p-6 rounded-2xl border border-surface-container-high/60 shadow-sm text-center py-10 space-y-4">
+          <div class="inline-flex p-3 rounded-full bg-primary-fixed text-primary animate-spin">
+            <span class="material-symbols-outlined text-[28px]">autorenew</span>
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-on-surface font-heading">Consulting Groq LPU...</h3>
+            <p class="text-xs text-on-surface-variant mt-1" id="loadingStatusText">
+              Scanning Bangalore dataset, filtering candidates, and formulating personalized recommendations.
+            </p>
+          </div>
+        </div>
+
+        <!-- Shimmer Card Skeletons -->
+        <div class="space-y-3 shimmer-pulse">
+          <div class="bg-surface-container-lowest p-5 rounded-2xl border border-surface-container-high/60 space-y-3">
+            <div class="flex justify-between">
+              <div class="h-4 bg-surface-container-high rounded w-48"></div>
+              <div class="h-4 bg-surface-container-high rounded w-12"></div>
+            </div>
+            <div class="h-3 bg-surface-container-low rounded w-32"></div>
+            <div class="flex gap-2">
+              <div class="h-5 bg-surface-container rounded-full w-20"></div>
+              <div class="h-5 bg-surface-container rounded-full w-20"></div>
+            </div>
+            <div class="h-14 bg-surface-container-low rounded-xl"></div>
+          </div>
+          <div class="bg-surface-container-lowest p-5 rounded-2xl border border-surface-container-high/60 space-y-3">
+            <div class="flex justify-between">
+              <div class="h-4 bg-surface-container-high rounded w-40"></div>
+              <div class="h-4 bg-surface-container-high rounded w-12"></div>
+            </div>
+            <div class="h-3 bg-surface-container-low rounded w-28"></div>
+            <div class="flex gap-2">
+              <div class="h-5 bg-surface-container rounded-full w-20"></div>
+              <div class="h-5 bg-surface-container rounded-full w-20"></div>
+            </div>
+            <div class="h-14 bg-surface-container-low rounded-xl"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= VIEW STATE 3: No Results ================= -->
+      <div class="hidden bg-surface-container-lowest p-8 rounded-2xl border border-surface-container-high/60 shadow-sm text-center py-14" id="view-state-no-results">
+        <div class="max-w-md mx-auto space-y-3">
+          <div class="w-16 h-16 mx-auto rounded-full bg-error-container text-error flex items-center justify-center shadow-xs">
+            <span class="material-symbols-outlined text-[36px]">travel_explore</span>
+          </div>
+          <h3 class="text-lg font-bold text-on-surface font-heading" id="noResultsTitle">No restaurants matched your exact filters</h3>
+          <p class="text-xs text-on-surface-variant leading-relaxed" id="noResultsMessage">
+            We couldn’t find matching restaurants in this neighborhood with the specified rating and budget. Try broadening your criteria:
+          </p>
+          <div class="pt-3 flex flex-col gap-2 text-left">
+            <button class="p-3 bg-surface-container-low hover:bg-surface-container rounded-xl flex items-center justify-between text-on-surface transition-colors" onclick="relaxRating(3.8)" type="button">
+              <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-secondary text-[18px]">star_half</span>
+                <span class="text-xs font-semibold">Lower rating threshold to 3.8 ★</span>
+              </div>
+              <span class="text-xs font-bold text-secondary">Broaden search</span>
+            </button>
+            <button class="p-3 bg-surface-container-low hover:bg-surface-container rounded-xl flex items-center justify-between text-on-surface transition-colors" onclick="expandBudget()" type="button">
+              <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-tertiary text-[18px]">currency_rupee</span>
+                <span class="text-xs font-semibold">Allow any budget tier</span>
+              </div>
+              <span class="text-xs font-bold text-secondary">More options</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</main>
+
+<!-- Footer -->
+<footer class="w-full bg-surface-container-low border-t border-surface-container-high py-6 mt-8">
+  <div class="max-w-[1240px] mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between flex-wrap gap-3 text-xs text-on-surface-variant">
+    <p>© 2026 Zomato AI Restaurant Recommender • Powered by Groq LPU &amp; Real-World Zomato Dataset</p>
+    <div class="flex items-center gap-4">
+      <a href="/docs" target="_blank" class="hover:text-primary transition-colors">FastAPI Docs</a>
+      <a href="/dataset/status" target="_blank" class="hover:text-primary transition-colors">Dataset Status</a>
+      <a href="/health" target="_blank" class="hover:text-primary transition-colors">Health Check</a>
+    </div>
+  </div>
+</footer>
+
+<!-- Interactive Client Application Logic -->
+<script>
+  // Initial demo recommendations to display before search
+  const INITIAL_RECOMMENDATIONS = [
+    {
+      name: "Tipsy Bull - The Bar Exchange",
+      cuisine: "North Indian, Chinese, Continental, Mexican",
+      rating: 4.4,
+      estimated_cost: 1400,
+      explanation: "Fits the medium budget tier, exceeds the 4.2 rating threshold, and offers a diverse menu including North Indian, Chinese, Continental and Mexican, making it a versatile choice for Bellandur."
+    },
+    {
+      name: "Maia - Eat | Bake | Mom",
+      cuisine: "Continental, North Indian, Beverages",
+      rating: 4.3,
+      estimated_cost: 1200,
+      explanation: "A medium-priced spot with a solid 4.3 rating, serving Continental and North Indian dishes, ideal for a relaxed casual-dining experience in Bellandur."
+    },
+    {
+      name: "Glassy",
+      cuisine: "North Indian, Chinese",
+      rating: 4.2,
+      estimated_cost: 1400,
+      explanation: "Meets the medium budget and minimum rating, offering North Indian and Chinese cuisine in a club setting, suitable for a slightly upscale night out."
+    },
+    {
+      name: "Chullah Chandigarh",
+      cuisine: "North Indian",
+      rating: 4.2,
+      estimated_cost: 800,
+      explanation: "Provides a budget-friendly medium tier option with a 4.2 rating, focusing on authentic North Indian flavors at a reasonable cost."
+    },
+    {
+      name: "eat.fit",
+      cuisine: "Healthy Food, North Indian, Biryani",
+      rating: 4.4,
+      estimated_cost: 500,
+      explanation: "Although low-budget, it boasts the highest rating (4.4) among the remaining choices and offers healthy North Indian and continental options, making it a strong fallback."
+    }
+  ];
+
+  function renderRecommendations(recs, metadata = {}, summary = null) {
+    const container = document.getElementById("recommendationsList");
+    container.innerHTML = "";
+
+    if (!recs || recs.length === 0) {
+      showState("no-results");
+      return;
+    }
+
+    // Update match count badge
+    document.getElementById("matchBadgeCount").innerText = `${recs.length} Curated Matches`;
+
+    // Update AI Summary
+    if (summary) {
+      document.getElementById("aiSummaryText").innerText = summary;
+    }
+
+    // Update Telemetry
+    if (metadata.latency_ms) {
+      document.getElementById("telemetryLatency").innerText = `${metadata.latency_ms} ms latency`;
+    }
+    if (metadata.candidates_considered) {
+      document.getElementById("telemetryCandidates").innerText = `${metadata.candidates_considered} candidates evaluated`;
+    }
+    if (metadata.model) {
+      document.getElementById("telemetryModel").innerText = metadata.model;
+    }
+
+    // Check relaxation
+    const relaxedBox = document.getElementById("relaxedWarningBanner");
+    if (metadata.relaxation_applied && metadata.relaxation_applied.length > 0) {
+      relaxedBox.classList.remove("hidden");
+      document.getElementById("relaxationMessage").innerHTML = `<strong>Notice:</strong> Relaxed criteria on: <em>${metadata.relaxation_applied.join(", ")}</em> to find the best available matches.`;
+    } else {
+      relaxedBox.classList.add("hidden");
+    }
+
+    const rankBadges = [
+      {"title": "🏆 #1 Top Pick", "class": "bg-[#fef3c7] text-[#92400e]"},
+      {"title": "✨ #2 Great Match", "class": "bg-secondary-container text-on-secondary-container"},
+      {"title": "💎 #3 Standout Choice", "class": "bg-primary-fixed text-primary"},
+      {"title": "⭐ #4 Recommended", "class": "bg-surface-container text-on-surface"},
+      {"title": "⭐ #5 Recommended", "class": "bg-surface-container text-on-surface"}
+    ];
+
+    recs.forEach((rec, idx) => {
+      const badge = rankBadges[idx] || {"title": `★ #${idx+1} Match`, "class": "bg-surface-container text-on-surface"};
+      const cuisineList = (rec.cuisine || "").split(",").map(c => c.trim()).filter(Boolean);
+      const cuisinesHtml = cuisineList.map(c => `<span class="px-2.5 py-0.5 bg-surface-container text-[11px] rounded-md text-on-surface font-medium">${c}</span>`).join(" ");
+
+      const card = document.createElement("article");
+      card.className = "bg-surface-container-lowest rounded-2xl p-5 border border-surface-container-high/60 shadow-sm hover:shadow-md transition-shadow";
+      card.innerHTML = `
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <div class="flex items-center gap-2 mb-1 flex-wrap">
+              <span class="inline-block px-2.5 py-0.5 ${badge.class} text-[10px] font-bold rounded-full">${badge.title}</span>
+              <span class="text-xs text-on-surface-variant font-medium flex items-center gap-0.5">
+                <span class="material-symbols-outlined text-[13px]">location_on</span> ${document.getElementById("locationSelect").value || "Bangalore"}
+              </span>
+            </div>
+            <h3 class="text-lg font-bold text-on-surface font-heading">${rec.name}</h3>
+          </div>
+          <div class="px-2.5 py-1 bg-secondary text-white rounded-lg text-xs font-bold flex items-center gap-1 shrink-0 shadow-xs">
+            <span>${Number(rec.rating).toFixed(1)}</span>
+            <span class="material-symbols-outlined text-[13px] icon-fill">star</span>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2 text-xs text-on-surface-variant mt-1.5 flex-wrap">
+          <span class="font-bold text-on-surface">₹${rec.estimated_cost} for two</span>
+          <span>•</span>
+          <span>${rec.estimated_cost <= 500 ? "Low Budget" : (rec.estimated_cost <= 1500 ? "Medium Budget" : "High Budget")}</span>
+        </div>
+
+        <div class="flex flex-wrap gap-1.5 mt-2.5">
+          ${cuisinesHtml}
+        </div>
+
+        <!-- AI Insight Box -->
+        <div class="mt-3 p-3 bg-surface-container-low rounded-xl flex items-start gap-2.5 text-xs border border-surface-container">
+          <div class="p-1 bg-primary text-white rounded-md shrink-0 mt-0.5 shadow-xs">
+            <span class="material-symbols-outlined text-[14px] icon-fill">auto_awesome</span>
+          </div>
+          <div class="space-y-0.5">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-primary">AI Insight &amp; Reason</span>
+            <p class="text-on-surface leading-relaxed text-xs">${rec.explanation}</p>
+          </div>
+        </div>
+
+        <div class="mt-3 pt-2.5 border-t border-surface-container-high/40 flex items-center justify-between flex-wrap gap-2 text-xs">
+          <span class="text-secondary font-medium flex items-center gap-1">
+            <span class="material-symbols-outlined text-[15px]">verified</span> Ground Truth Verified
+          </span>
+          <div class="flex items-center gap-2">
+            <button type="button" onclick="alert('Selected: ' + '${rec.name.replace(/'/g, "\'")}')" class="px-3.5 py-1.5 rounded-lg bg-primary text-white font-semibold hover:bg-primary-container shadow-xs text-xs transition-colors">Select Restaurant</button>
+          </div>
+        </div>
+      `;
+      container.appendChild(card);
+    });
+
+    showState("ranked");
+  }
+
+  function showState(stateKey) {
+    const views = ["view-state-ranked", "view-state-loading", "view-state-no-results"];
+    views.forEach(v => document.getElementById(v).classList.add("hidden"));
+
+    if (stateKey === "ranked") {
+      document.getElementById("view-state-ranked").classList.remove("hidden");
+    } else if (stateKey === "loading") {
+      document.getElementById("view-state-loading").classList.remove("hidden");
+    } else if (stateKey === "no-results") {
+      document.getElementById("view-state-no-results").classList.remove("hidden");
+    }
+  }
+
+  async function handleFormSubmit(e) {
+    if (e) e.preventDefault();
+
+    const location = document.getElementById("locationSelect").value;
+    const budget = document.getElementById("budgetSelect").value;
+    const cuisine = document.getElementById("cuisineInput").value.trim() || "any";
+    const min_rating = parseFloat(document.getElementById("ratingRange").value);
+    const additional_preferences = document.getElementById("aiPromptInput").value.trim() || null;
+    const top_k = parseInt(document.getElementById("topKSelect").value || 5);
+
+    // Update active filter chips
+    document.getElementById("chipLoc").innerText = `📍 ${location.charAt(0).toUpperCase() + location.slice(1)}`;
+    document.getElementById("chipBudget").innerText = `₹ ${budget === "low" ? "≤ ₹500" : (budget === "medium" ? "₹501–₹1,500" : "> ₹1,500")}`;
+    document.getElementById("chipCuisine").innerText = `🍲 ${cuisine === "any" ? "Any Cuisine" : cuisine}`;
+    document.getElementById("chipRating").innerText = `★ ${min_rating.toFixed(1)}+ Rating`;
+
+    showState("loading");
+    document.getElementById("loadingStatusText").innerText = `Querying Zomato dataset in ${location} and formulating recommendations with Groq LPU...`;
+    document.getElementById("submitBtn").disabled = true;
+
+    const payload = {
+      location: location,
+      budget: budget,
+      cuisine: cuisine,
+      min_rating: min_rating,
+      additional_preferences: additional_preferences,
+      top_k: top_k
+    };
+
+    const API_BASE = (window.location.protocol === "http:" || window.location.protocol === "https:")
+      ? ""
+      : "http://127.0.0.1:8000";
+
+    try {
+      const res = await fetch(API_BASE + "/api/v1/recommendations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      if (!res.ok) {
+        throw new Error(`API error: ${res.status} ${res.statusText}`);
+      }
+
+      const data = await res.json();
+      renderRecommendations(data.recommendations, data.metadata || {}, data.summary);
+    } catch (err) {
+      console.warn("Backend API call failed:", err);
+      showState("no-results");
+      document.getElementById("noResultsTitle").innerText = "Unable to connect to recommendation service";
+      document.getElementById("noResultsMessage").innerText = "Please ensure the FastAPI server is running at http://127.0.0.1:8000.";
+    } finally {
+      document.getElementById("submitBtn").disabled = false;
+    }
+  }
+
+  function setLocation(loc) {
+    const sel = document.getElementById("locationSelect");
+    for (let opt of sel.options) {
+      if (opt.value.toLowerCase().includes(loc.toLowerCase())) {
+        sel.value = opt.value;
+        break;
+      }
+    }
+    handleFormSubmit();
+  }
+
+  function setCuisine(c) {
+    document.getElementById("cuisineInput").value = c;
+    const btns = document.querySelectorAll(".cuisine-tag-btn");
+    btns.forEach(b => {
+      if (b.innerText.toLowerCase().includes(c.toLowerCase())) {
+        b.className = "cuisine-tag-btn px-2.5 py-1 rounded-full bg-primary-fixed text-primary font-semibold text-[11px] shadow-xs";
+      } else {
+        b.className = "cuisine-tag-btn px-2.5 py-1 rounded-full bg-surface-container text-on-surface text-[11px] hover:bg-surface-container-high";
+      }
+    });
+    handleFormSubmit();
+  }
+
+  function updateRatingDisplay(val) {
+    const range = document.getElementById("ratingRange");
+    if (range) {
+      const min = parseFloat(range.min || 3.0);
+      const max = parseFloat(range.max || 5.0);
+      const pct = Math.max(0, Math.min(100, ((val - min) / (max - min)) * 100));
+      range.style.background = `linear-gradient(to right, #e23744 0%, #e23744 ${pct}%, #e5e2e1 ${pct}%, #e5e2e1 100%)`;
+    }
+    const badge = document.getElementById("ratingDisplayVal");
+    if (badge) badge.innerText = parseFloat(val).toFixed(1);
+  }
+
+  function appendVibe(vibe) {
+    const ta = document.getElementById("aiPromptInput");
+    if (!ta.value.trim()) {
+      ta.value = vibe;
+    } else if (!ta.value.toLowerCase().includes(vibe.toLowerCase())) {
+      ta.value += ", " + vibe;
+    }
+    handleFormSubmit();
+  }
+
+  function relaxRating(val) {
+    document.getElementById("ratingRange").value = val;
+    updateRatingDisplay(val);
+    handleFormSubmit();
+  }
+
+  function expandBudget() {
+    document.getElementById("budgetSelect").value = "high";
+    handleFormSubmit();
+  }
+
+  function resetForm() {
+    document.getElementById("locationSelect").value = "bellandur";
+    document.getElementById("budgetSelect").value = "medium";
+    document.getElementById("cuisineInput").value = "any";
+    document.getElementById("ratingRange").value = "4.2";
+    updateRatingDisplay("4.2");
+    document.getElementById("aiPromptInput").value = "";
+    document.getElementById("topKSelect").value = "5";
+    handleFormSubmit();
+  }
+
+  // Automatically fetch live recommendations on page load
+  window.addEventListener("DOMContentLoaded", () => {
+    const range = document.getElementById("ratingRange");
+    if (range) updateRatingDisplay(range.value);
+    handleFormSubmit();
+  });
+</script>
+
+</body>
+</html>

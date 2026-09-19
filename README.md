@@ -4,6 +4,15 @@ An intelligent, production-ready restaurant recommendation system inspired by Zo
 
 ---
 
+## 🌐 Live Deployments
+
+| Component | Platform | Live URL | Status |
+|---|---|---|---|
+| **AI Recommendation App (Full Stack)** | **Streamlit Community Cloud** | [kritikapilani-zomato-ai-project-streamlit-app-iqjacc.streamlit.app](https://kritikapilani-zomato-ai-project-streamlit-app-iqjacc.streamlit.app) | 🟢 Live |
+| **Web Frontend & Embed** | **Vercel** | [zomato-ai-project-pi.vercel.app](https://zomato-ai-project-pi.vercel.app) | 🟢 Live |
+
+---
+
 ## 🌟 Highlights & Architecture
 
 The system employs a high-performance **Retrieve-Then-Reason** architecture:

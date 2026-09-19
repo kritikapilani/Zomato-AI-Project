@@ -1,0 +1,467 @@
+[
+  {
+    "name": "Whitefield",
+    "value": "whitefield",
+    "count": 887
+  },
+  {
+    "name": "Electronic City",
+    "value": "electronic city",
+    "count": 730
+  },
+  {
+    "name": "Btm",
+    "value": "btm",
+    "count": 729
+  },
+  {
+    "name": "Hsr",
+    "value": "hsr",
+    "count": 706
+  },
+  {
+    "name": "Marathahalli",
+    "value": "marathahalli",
+    "count": 688
+  },
+  {
+    "name": "Indiranagar",
+    "value": "indiranagar",
+    "count": 533
+  },
+  {
+    "name": "Jp Nagar",
+    "value": "jp nagar",
+    "count": 523
+  },
+  {
+    "name": "Bannerghatta Road",
+    "value": "bannerghatta road",
+    "count": 474
+  },
+  {
+    "name": "Jayanagar",
+    "value": "jayanagar",
+    "count": 367
+  },
+  {
+    "name": "Bellandur",
+    "value": "bellandur",
+    "count": 363
+  },
+  {
+    "name": "Sarjapur Road",
+    "value": "sarjapur road",
+    "count": 339
+  },
+  {
+    "name": "New Bel Road",
+    "value": "new bel road",
+    "count": 308
+  },
+  {
+    "name": "Banashankari",
+    "value": "banashankari",
+    "count": 295
+  },
+  {
+    "name": "Koramangala 5Th Block",
+    "value": "koramangala 5th block",
+    "count": 269
+  },
+  {
+    "name": "Kalyan Nagar",
+    "value": "kalyan nagar",
+    "count": 242
+  },
+  {
+    "name": "Malleshwaram",
+    "value": "malleshwaram",
+    "count": 238
+  },
+  {
+    "name": "Rajajinagar",
+    "value": "rajajinagar",
+    "count": 235
+  },
+  {
+    "name": "Basavanagudi",
+    "value": "basavanagudi",
+    "count": 211
+  },
+  {
+    "name": "Banaswadi",
+    "value": "banaswadi",
+    "count": 209
+  },
+  {
+    "name": "Frazer Town",
+    "value": "frazer town",
+    "count": 192
+  },
+  {
+    "name": "Kammanahalli",
+    "value": "kammanahalli",
+    "count": 182
+  },
+  {
+    "name": "Brookefield",
+    "value": "brookefield",
+    "count": 178
+  },
+  {
+    "name": "Koramangala 1St Block",
+    "value": "koramangala 1st block",
+    "count": 166
+  },
+  {
+    "name": "Koramangala 6Th Block",
+    "value": "koramangala 6th block",
+    "count": 151
+  },
+  {
+    "name": "Koramangala 7Th Block",
+    "value": "koramangala 7th block",
+    "count": 146
+  },
+  {
+    "name": "Old Airport Road",
+    "value": "old airport road",
+    "count": 142
+  },
+  {
+    "name": "Koramangala 4Th Block",
+    "value": "koramangala 4th block",
+    "count": 133
+  },
+  {
+    "name": "Brigade Road",
+    "value": "brigade road",
+    "count": 131
+  },
+  {
+    "name": "Ulsoor",
+    "value": "ulsoor",
+    "count": 119
+  },
+  {
+    "name": "Basaveshwara Nagar",
+    "value": "basaveshwara nagar",
+    "count": 105
+  },
+  {
+    "name": "Nagawara",
+    "value": "nagawara",
+    "count": 104
+  },
+  {
+    "name": "Bommanahalli",
+    "value": "bommanahalli",
+    "count": 101
+  },
+  {
+    "name": "Domlur",
+    "value": "domlur",
+    "count": 100
+  },
+  {
+    "name": "Mg Road",
+    "value": "mg road",
+    "count": 98
+  },
+  {
+    "name": "Richmond Road",
+    "value": "richmond road",
+    "count": 94
+  },
+  {
+    "name": "Kumaraswamy Layout",
+    "value": "kumaraswamy layout",
+    "count": 84
+  },
+  {
+    "name": "Residency Road",
+    "value": "residency road",
+    "count": 84
+  },
+  {
+    "name": "Majestic",
+    "value": "majestic",
+    "count": 84
+  },
+  {
+    "name": "Jeevan Bhima Nagar",
+    "value": "jeevan bhima nagar",
+    "count": 78
+  },
+  {
+    "name": "Shanti Nagar",
+    "value": "shanti nagar",
+    "count": 77
+  },
+  {
+    "name": "Thippasandra",
+    "value": "thippasandra",
+    "count": 73
+  },
+  {
+    "name": "Yeshwantpur",
+    "value": "yeshwantpur",
+    "count": 69
+  },
+  {
+    "name": "Ejipura",
+    "value": "ejipura",
+    "count": 65
+  },
+  {
+    "name": "Hennur",
+    "value": "hennur",
+    "count": 65
+  },
+  {
+    "name": "Shivajinagar",
+    "value": "shivajinagar",
+    "count": 61
+  },
+  {
+    "name": "Vijay Nagar",
+    "value": "vijay nagar",
+    "count": 58
+  },
+  {
+    "name": "Seshadripuram",
+    "value": "seshadripuram",
+    "count": 58
+  },
+  {
+    "name": "Kaggadasapura",
+    "value": "kaggadasapura",
+    "count": 58
+  },
+  {
+    "name": "Church Street",
+    "value": "church street",
+    "count": 57
+  },
+  {
+    "name": "Lavelle Road",
+    "value": "lavelle road",
+    "count": 56
+  },
+  {
+    "name": "Vasanth Nagar",
+    "value": "vasanth nagar",
+    "count": 54
+  },
+  {
+    "name": "Rt Nagar",
+    "value": "rt nagar",
+    "count": 52
+  },
+  {
+    "name": "Wilson Garden",
+    "value": "wilson garden",
+    "count": 50
+  },
+  {
+    "name": "Cunningham Road",
+    "value": "cunningham road",
+    "count": 49
+  },
+  {
+    "name": "Itpl Main Road, Whitefield",
+    "value": "itpl main road, whitefield",
+    "count": 48
+  },
+  {
+    "name": "Sanjay Nagar",
+    "value": "sanjay nagar",
+    "count": 47
+  },
+  {
+    "name": "City Market",
+    "value": "city market",
+    "count": 45
+  },
+  {
+    "name": "Koramangala 8Th Block",
+    "value": "koramangala 8th block",
+    "count": 45
+  },
+  {
+    "name": "Hbr Layout",
+    "value": "hbr layout",
+    "count": 45
+  },
+  {
+    "name": "Varthur Main Road, Whitefield",
+    "value": "varthur main road, whitefield",
+    "count": 45
+  },
+  {
+    "name": "Sahakara Nagar",
+    "value": "sahakara nagar",
+    "count": 45
+  },
+  {
+    "name": "Cv Raman Nagar",
+    "value": "cv raman nagar",
+    "count": 44
+  },
+  {
+    "name": "Commercial Street",
+    "value": "commercial street",
+    "count": 44
+  },
+  {
+    "name": "St. Marks Road",
+    "value": "st. marks road",
+    "count": 35
+  },
+  {
+    "name": "Sadashiv Nagar",
+    "value": "sadashiv nagar",
+    "count": 32
+  },
+  {
+    "name": "Race Course Road",
+    "value": "race course road",
+    "count": 30
+  },
+  {
+    "name": "South Bangalore",
+    "value": "south bangalore",
+    "count": 28
+  },
+  {
+    "name": "East Bangalore",
+    "value": "east bangalore",
+    "count": 23
+  },
+  {
+    "name": "Koramangala 3Rd Block",
+    "value": "koramangala 3rd block",
+    "count": 23
+  },
+  {
+    "name": "Magadi Road",
+    "value": "magadi road",
+    "count": 23
+  },
+  {
+    "name": "Jalahalli",
+    "value": "jalahalli",
+    "count": 22
+  },
+  {
+    "name": "Rammurthy Nagar",
+    "value": "rammurthy nagar",
+    "count": 19
+  },
+  {
+    "name": "Hosur Road",
+    "value": "hosur road",
+    "count": 16
+  },
+  {
+    "name": "Infantry Road",
+    "value": "infantry road",
+    "count": 15
+  },
+  {
+    "name": "Mysore Road",
+    "value": "mysore road",
+    "count": 13
+  },
+  {
+    "name": "Kr Puram",
+    "value": "kr puram",
+    "count": 13
+  },
+  {
+    "name": "Sankey Road",
+    "value": "sankey road",
+    "count": 13
+  },
+  {
+    "name": "Uttarahalli",
+    "value": "uttarahalli",
+    "count": 11
+  },
+  {
+    "name": "Kanakapura Road",
+    "value": "kanakapura road",
+    "count": 10
+  },
+  {
+    "name": "Koramangala 2Nd Block",
+    "value": "koramangala 2nd block",
+    "count": 10
+  },
+  {
+    "name": "Koramangala",
+    "value": "koramangala",
+    "count": 10
+  },
+  {
+    "name": "Old Madras Road",
+    "value": "old madras road",
+    "count": 9
+  },
+  {
+    "name": "Hebbal",
+    "value": "hebbal",
+    "count": 8
+  },
+  {
+    "name": "North Bangalore",
+    "value": "north bangalore",
+    "count": 7
+  },
+  {
+    "name": "Nagarbhavi",
+    "value": "nagarbhavi",
+    "count": 4
+  },
+  {
+    "name": "West Bangalore",
+    "value": "west bangalore",
+    "count": 4
+  },
+  {
+    "name": "Yelahanka",
+    "value": "yelahanka",
+    "count": 4
+  },
+  {
+    "name": "Rajarajeshwari Nagar",
+    "value": "rajarajeshwari nagar",
+    "count": 2
+  },
+  {
+    "name": "Langford Town",
+    "value": "langford town",
+    "count": 2
+  },
+  {
+    "name": "Central Bangalore",
+    "value": "central bangalore",
+    "count": 2
+  },
+  {
+    "name": "Jakkur",
+    "value": "jakkur",
+    "count": 1
+  },
+  {
+    "name": "Kengeri",
+    "value": "kengeri",
+    "count": 1
+  },
+  {
+    "name": "Peenya",
+    "value": "peenya",
+    "count": 1
+  }
+]

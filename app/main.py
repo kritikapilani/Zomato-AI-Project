@@ -1,3 +1,4 @@
+from contextlib import asynccontextmanager
 import os
 from pathlib import Path
 
@@ -6,12 +7,27 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from app import __version__
+from app.api.dependencies import get_loader
 from app.api.routes import router
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Pre-warm dataset cache into memory on server boot
+    try:
+        loader = get_loader()
+        loader.load()
+    except Exception as exc:
+        import logging
+        logging.getLogger(__name__).warning("Failed to preload dataset on startup: %s", exc)
+    yield
+
 
 app = FastAPI(
     title="Zomato Restaurant Recommendation API",
     description="AI-powered restaurant recommendations using structured filtering and Groq.",
     version=__version__,
+    lifespan=lifespan,
 )
 
 # Enable CORS for local and web clients (supporting Vercel, Railway, localhost, and custom domains)

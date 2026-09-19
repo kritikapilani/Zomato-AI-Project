@@ -14,6 +14,9 @@ build/
 
 data/*
 !data/.gitkeep
+!data/restaurants.parquet
+!data/locations.json
+!data/location_options.html
 
 .DS_Store
 .idea/

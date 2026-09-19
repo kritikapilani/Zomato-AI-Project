@@ -247,6 +247,28 @@ def get_cached_dataset_info() -> dict[str, Any]:
         return {"is_loaded": False, "row_count": 0, "locations_count": 0}
 
 
+def get_effective_settings():
+    """Get settings with st.secrets dynamically bridged on every execution."""
+    settings = get_settings()
+    if hasattr(st, "secrets"):
+        try:
+            for k, v in st.secrets.items():
+                if isinstance(v, str) and v.strip():
+                    key_lower = k.lower()
+                    if key_lower == "groq_api_key":
+                        settings.groq_api_key = v.strip()
+                        os.environ["GROQ_API_KEY"] = v.strip()
+                    elif key_lower == "groq_model":
+                        settings.groq_model = v.strip()
+                        os.environ["GROQ_MODEL"] = v.strip()
+                    elif key_lower == "hf_dataset_name":
+                        settings.hf_dataset_name = v.strip()
+                        os.environ["HF_DATASET_NAME"] = v.strip()
+        except Exception:
+            pass
+    return settings
+
+
 def fetch_recommendations(preferences: UserPreferences) -> RecommendationResponse:
     """
     Fetch recommendations using FastAPI HTTP endpoint if available;
@@ -263,22 +285,28 @@ def fetch_recommendations(preferences: UserPreferences) -> RecommendationRespons
         # Fallback to direct in-process orchestrator
         logger.info("FastAPI backend not running at %s. Using in-process orchestrator.", api_url)
 
-    # In-process execution
-    settings = get_settings()
+    # In-process execution with dynamic secrets
+    settings = get_effective_settings()
     groq_client = None
+    groq_error = None
     if settings.groq_api_key.strip():
         try:
             from app.services.groq_client import GroqLLMClient
 
             groq_client = GroqLLMClient(settings)
-        except Exception:
+        except Exception as exc:
+            groq_error = str(exc)
+            logger.warning("Groq client init error: %s", exc)
             groq_client = None
 
     orchestrator = RecommendationOrchestrator(
         settings=settings,
         groq_client=groq_client,
     )
-    return orchestrator.recommend(preferences)
+    res = orchestrator.recommend(preferences)
+    if groq_error:
+        res.metadata["groq_error"] = groq_error
+    return res
 
 
 # --- Popular Bangalore Locations & Cuisines ---
@@ -325,7 +353,7 @@ def main():
     row_count = dataset_info.get("row_count", 12519)
     loc_count = dataset_info.get("locations_count", 93)
 
-    settings = get_settings()
+    settings = get_effective_settings()
     has_groq = bool(settings.groq_api_key.strip())
 
     # Hero Banner
@@ -418,6 +446,16 @@ def main():
         ).strip() or None
 
         submit_btn = st.button("✨ Get Recommendations", type="primary", use_container_width=True)
+
+        st.markdown("---")
+        st.markdown("**🔌 Groq AI Status**")
+        if settings.groq_api_key.strip():
+            masked_key = f"...{settings.groq_api_key[-4:]}" if len(settings.groq_api_key) >= 4 else "Active"
+            st.success(f"**Groq LPU Connected** (`{masked_key}`)")
+            st.caption(f"Model: `{settings.groq_model}`")
+        else:
+            st.warning("⚠️ **Groq API Key Not Found**")
+            st.caption("Using deterministic scoring engine. Add `GROQ_API_KEY = \"gsk_...\"` in Streamlit Cloud Settings -> Secrets.")
 
     # --- Main Screen Content ---
     if submit_btn or "last_response" in st.session_state:

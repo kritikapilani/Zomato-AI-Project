@@ -744,9 +744,13 @@
       top_k: top_k
     };
 
-    const API_BASE = (window.location.protocol === "http:" || window.location.protocol === "https:")
-      ? ""
-      : "http://127.0.0.1:8000";
+    const urlBackendParam = new URLSearchParams(window.location.search).get("backend");
+    const storedBackend = localStorage.getItem("zomato_backend_url");
+    const API_BASE = window.__BACKEND_URL__
+      || urlBackendParam
+      || storedBackend
+      || ((window.location.hostname === "localhost" && window.location.port !== "8000") ? "http://127.0.0.1:8000" : "")
+      || (window.location.protocol.startsWith("http") ? "" : "http://127.0.0.1:8000");
 
     try {
       const res = await fetch(API_BASE + "/api/v1/recommendations", {
@@ -765,7 +769,7 @@
       console.warn("Backend API call failed:", err);
       showState("no-results");
       document.getElementById("noResultsTitle").innerText = "Unable to connect to recommendation service";
-      document.getElementById("noResultsMessage").innerText = "Please ensure the FastAPI server is running at http://127.0.0.1:8000.";
+      document.getElementById("noResultsMessage").innerText = `Please ensure the FastAPI server is running and accessible at ${API_BASE || window.location.origin}.`;
     } finally {
       document.getElementById("submitBtn").disabled = false;
     }

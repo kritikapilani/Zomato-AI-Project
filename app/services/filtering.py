@@ -146,14 +146,20 @@ class FilteringService:
             results.append(r)
         return results
 
-    def _rank_and_cap(self, candidates: list[Restaurant], limit: int) -> list[Restaurant]:
+    def _rank_and_cap(
+        self,
+        candidates: list[Restaurant],
+        limit: int,
+        target_budget: str | None = None,
+    ) -> list[Restaurant]:
         """
-        Pre-sort candidates by composite score (rating + votes), breaking ties
-        by rating, votes, and name. Caps output at limit.
+        Pre-sort candidates by composite score (rating + votes), prioritizing candidates
+        matching target_budget, breaking ties by rating, votes, and name. Caps output at limit.
         """
         sorted_candidates = sorted(
             candidates,
             key=lambda r: (
+                1 if (target_budget and r.budget_tier == target_budget) else 0,
                 calculate_candidate_score(r),
                 r.rating,
                 r.votes or 0,
@@ -171,6 +177,10 @@ class FilteringService:
         """
         Filter and rank candidate restaurants based on user preferences.
         Triggers staged filter relaxation if strict matches are below threshold (< 3).
+        Preserves budget tier as a hard constraint:
+          1. Relaxes rating first (while keeping budget and cuisine strictly intact).
+          2. Relaxes cuisine if zero matches remain (keeping budget strictly intact).
+          3. Relaxes budget ONLY as an absolute last resort if zero restaurants exist.
         """
         candidates_pool = pool if pool is not None else self.loader.get_restaurants()
         cap_limit = preferences.top_k * 6  # give LLM up to 6x candidate options
@@ -213,37 +223,8 @@ class FilteringService:
         current_cuisine: str = preferences.cuisine
         current_min_rating: float = preferences.min_rating
 
-        # Step 2: Staged relaxation if matches < 3
-        # Relaxation Step A: Relax Budget
-        if len(matches) < MIN_CANDIDATES_THRESHOLD and current_budget is not None:
-            relaxed_budget_matches = self._apply_filters(
-                candidates_pool,
-                location=preferences.location,
-                cuisine=current_cuisine,
-                min_rating=current_min_rating,
-                budget=None,  # allow any budget tier
-            )
-            if len(relaxed_budget_matches) > len(matches):
-                matches = relaxed_budget_matches
-                current_budget = None
-                relaxation_applied.append("budget")
-
-        # Relaxation Step B: Relax Cuisine
-        if len(matches) < MIN_CANDIDATES_THRESHOLD and current_cuisine:
-            # Try relaxing to any cuisine in the same location and rating
-            relaxed_cuisine_matches = self._apply_filters(
-                candidates_pool,
-                location=preferences.location,
-                cuisine="",  # allow any cuisine
-                min_rating=current_min_rating,
-                budget=current_budget,
-            )
-            if len(relaxed_cuisine_matches) > len(matches):
-                matches = relaxed_cuisine_matches
-                current_cuisine = ""
-                relaxation_applied.append("cuisine")
-
-        # Relaxation Step C: Relax Rating
+        # Step 2: Staged relaxation if matches < MIN_CANDIDATES_THRESHOLD (3)
+        # Relaxation Step A: Relax Rating first (keep budget and cuisine strictly intact)
         while len(matches) < MIN_CANDIDATES_THRESHOLD and current_min_rating > 0.0:
             current_min_rating = max(0.0, round(current_min_rating - 0.5, 1))
             relaxed_rating_matches = self._apply_filters(
@@ -258,8 +239,52 @@ class FilteringService:
                 if "rating" not in relaxation_applied:
                     relaxation_applied.append("rating")
 
+        # Relaxation Step B: Relax Cuisine ONLY IF zero matches exist (keep budget intact)
+        if len(matches) == 0 and current_cuisine and current_cuisine.lower() not in ("any", "all", "*", "anything", "all cuisines"):
+            relaxed_cuisine_matches = self._apply_filters(
+                candidates_pool,
+                location=preferences.location,
+                cuisine="",  # allow any cuisine
+                min_rating=current_min_rating,
+                budget=current_budget,
+            )
+            if len(relaxed_cuisine_matches) > len(matches):
+                matches = relaxed_cuisine_matches
+                current_cuisine = ""
+                relaxation_applied.append("cuisine")
+
+        # Relaxation Step C: Relax Budget ONLY as an absolute last resort if ZERO matches exist
+        if len(matches) == 0 and current_budget is not None:
+            relaxed_budget_matches = self._apply_filters(
+                candidates_pool,
+                location=preferences.location,
+                cuisine=preferences.cuisine,
+                min_rating=preferences.min_rating,
+                budget=None,
+            )
+            if not relaxed_budget_matches:
+                relaxed_budget_matches = self._apply_filters(
+                    candidates_pool,
+                    location=preferences.location,
+                    cuisine=preferences.cuisine,
+                    min_rating=0.0,
+                    budget=None,
+                )
+            if not relaxed_budget_matches:
+                relaxed_budget_matches = self._apply_filters(
+                    candidates_pool,
+                    location=preferences.location,
+                    cuisine="",
+                    min_rating=0.0,
+                    budget=None,
+                )
+            if relaxed_budget_matches:
+                matches = relaxed_budget_matches
+                current_budget = None
+                relaxation_applied.append("budget")
+
         total_matching = len(matches)
-        ranked_candidates = self._rank_and_cap(matches, cap_limit)
+        ranked_candidates = self._rank_and_cap(matches, cap_limit, target_budget=preferences.budget)
 
         message = None
         if not ranked_candidates:

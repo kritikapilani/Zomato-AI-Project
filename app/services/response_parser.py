@@ -137,24 +137,33 @@ class ResponseParser:
                 break
 
         # If LLM under-returned or hallucinations were dropped, top up from candidate pool
+        # prioritizing candidates that strictly match the requested budget tier
         if len(validated_recommendations) < preferences.top_k:
-            for c in candidates:
-                if c.name.lower() not in seen_names:
-                    seen_names.add(c.name.lower())
-                    validated_recommendations.append(
-                        Recommendation(
-                            name=c.name,
-                            cuisine=", ".join(c.cuisines),
-                            rating=c.rating,
-                            estimated_cost=c.cost_for_two,
-                            explanation=(
-                                f"Top pick in {c.location} with {c.rating}★ rating "
-                                f"fitting your {c.budget_tier} budget preference."
-                            ),
-                        )
+            remaining_candidates = sorted(
+                [c for c in candidates if c.name.lower() not in seen_names],
+                key=lambda c: (
+                    1 if c.budget_tier == preferences.budget else 0,
+                    c.rating,
+                    c.votes or 0,
+                ),
+                reverse=True,
+            )
+            for c in remaining_candidates:
+                seen_names.add(c.name.lower())
+                validated_recommendations.append(
+                    Recommendation(
+                        name=c.name,
+                        cuisine=", ".join(c.cuisines),
+                        rating=c.rating,
+                        estimated_cost=c.cost_for_two,
+                        explanation=(
+                            f"Top pick in {c.location} with {c.rating}★ rating "
+                            f"fitting your {c.budget_tier} budget preference."
+                        ),
                     )
-                    if len(validated_recommendations) >= preferences.top_k:
-                        break
+                )
+                if len(validated_recommendations) >= preferences.top_k:
+                    break
 
         if not summary:
             summary = (
@@ -184,9 +193,18 @@ class ResponseParser:
     ) -> RecommendationResponse:
         """
         Deterministic fallback response generator when Groq is unreachable, times out,
-        or response parsing fails.
+        or response parsing fails. Prioritizes candidates matching user budget tier.
         """
-        top_candidates = candidates[: preferences.top_k]
+        sorted_candidates = sorted(
+            candidates,
+            key=lambda c: (
+                1 if c.budget_tier == preferences.budget else 0,
+                c.rating,
+                c.votes or 0,
+            ),
+            reverse=True,
+        )
+        top_candidates = sorted_candidates[: preferences.top_k]
         recommendations: list[Recommendation] = []
 
         for idx, c in enumerate(top_candidates, start=1):

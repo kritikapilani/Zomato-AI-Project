@@ -12,9 +12,14 @@ CRITICAL RULES:
 1. You must ONLY recommend restaurants from the provided [Candidate Restaurants] list.
 2. NEVER invent, hallucinate, or recommend any restaurant not explicitly present in the list.
 3. Match the exact restaurant name as provided in the candidate list.
-4. Rank the chosen restaurants from best to worst fit based on the user's preferences.
-5. For each recommendation, provide an insightful 1-2 sentence explanation specifically addressing why it fits the user's cuisine, budget, rating, and any custom preferences.
-6. Return your response STRICTLY as a valid JSON object matching the schema below. Do not wrap in markdown or include conversational text outside the JSON.
+4. STRICT BUDGET TIER COMPLIANCE: The user selected a specific Budget Tier:
+   - 'low': cost for two <= ₹500
+   - 'medium': cost for two ₹501 to ₹1,500
+   - 'high': cost for two > ₹1,500
+   You MUST strictly prioritize candidates matching the user's requested budget tier. Never recommend a higher-budget restaurant if candidates within the user's requested budget tier are present in the list.
+5. Rank the chosen restaurants from best to worst fit based on the user's preferences.
+6. For each recommendation, provide an insightful 1-2 sentence explanation specifically addressing why it fits the user's cuisine, budget, rating, and any custom preferences.
+7. Return your response STRICTLY as a valid JSON object matching the schema below. Do not wrap in markdown or include conversational text outside the JSON.
 
 REQUIRED JSON OUTPUT SCHEMA:
 {
@@ -58,10 +63,16 @@ class PromptBuilder:
 
         candidates_json = json.dumps(candidates_data, indent=2)
 
+        budget_description = (
+            "cost for two <= ₹500"
+            if preferences.budget == "low"
+            else ("cost for two ₹501 to ₹1,500" if preferences.budget == "medium" else "cost for two > ₹1,500")
+        )
+
         prompt_lines = [
             "### USER PREFERENCES",
             f"- Location: {preferences.location}",
-            f"- Budget Tier: {preferences.budget}",
+            f"- Budget Tier: {preferences.budget} ({budget_description})",
             f"- Preferred Cuisine: {preferences.cuisine}",
             f"- Minimum Rating: {preferences.min_rating}",
             f"- Additional Preferences: {preferences.additional_preferences or 'None'}",
@@ -71,9 +82,9 @@ class PromptBuilder:
             candidates_json,
             "",
             "### YOUR TASK",
-            f"1. Select the top {preferences.top_k} restaurants that best satisfy the user's preferences.",
+            f"1. Select the top {preferences.top_k} restaurants that best satisfy the user's preferences, strictly adhering to their {preferences.budget} budget tier ({budget_description}).",
             "2. Rank them by relevance (rank 1 = best fit).",
-            "3. Write a personalized 1-2 sentence explanation for each choice.",
+            "3. Write a personalized 1-2 sentence explanation for each choice explicitly noting how it satisfies their budget and cuisine.",
             "4. Provide a brief 1-sentence summary of the selection.",
             "5. Output valid JSON according to the required schema.",
         ]

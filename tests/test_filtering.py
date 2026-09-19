@@ -238,3 +238,27 @@ def test_full_dataset_filtering_benchmark():
     assert elapsed_ms < 200
     assert len(result.candidates) > 0
     assert len(result.candidates) <= 30
+
+
+def test_strict_budget_tier_preserved():
+    """Verify that budget tier is strictly preserved when relaxing rating or cuisine."""
+    loader = DatasetLoader()
+    if not loader.settings.dataset_cache_path or not Path(loader.settings.dataset_cache_path).exists():
+        pytest.skip("Local Parquet cache not found; skipping strict budget tier test.")
+
+    service = FilteringService(loader=loader)
+
+    for loc in ["indiranagar", "koramangala", "whitefield"]:
+        prefs = UserPreferences(
+            location=loc,
+            budget="low",
+            cuisine="Italian",
+            min_rating=4.2,
+            top_k=3,
+        )
+        result = service.filter(prefs)
+        assert len(result.candidates) > 0
+        # Crucial check: No medium or high budget restaurants leaked into low budget recommendations
+        assert all(c.budget_tier == "low" for c in result.candidates)
+        assert "budget" not in result.relaxation_applied
+

@@ -92,6 +92,7 @@
       cursor: pointer;
     }
   </style>
+  <script src="config.js"></script>
 </head>
 <body class="bg-[#fcf9f8] text-[#1b1b1b] min-h-screen flex flex-col">
 
@@ -110,11 +111,18 @@
       <span class="bg-primary text-white text-xs font-semibold px-3.5 py-1.5 rounded-full shadow-sm flex items-center gap-1.5">
         <span class="material-symbols-outlined text-[14px] icon-fill">auto_awesome</span> Recommendations
       </span>
-      <a class="text-on-surface-variant hover:text-on-surface text-xs font-medium px-3 py-1.5 transition-colors" href="/docs" target="_blank">API Docs</a>
-      <a class="text-on-surface-variant hover:text-on-surface text-xs font-medium px-3 py-1.5 transition-colors" href="/health" target="_blank">Health Status</a>
+      <a id="apiDocsLink" class="text-on-surface-variant hover:text-on-surface text-xs font-medium px-3 py-1.5 transition-colors" href="/docs" target="_blank">API Docs</a>
+      <a id="healthStatusLink" class="text-on-surface-variant hover:text-on-surface text-xs font-medium px-3 py-1.5 transition-colors" href="/health" target="_blank">Health Status</a>
     </nav>
 
-    <div class="flex items-center gap-3">
+    <div class="flex items-center gap-2 sm:gap-3">
+      <!-- Railway / Backend Connection Pill -->
+      <button id="backendConfigBtn" onclick="openBackendModal()" type="button" title="Configure Backend API Server" class="inline-flex items-center gap-1.5 bg-surface-container/80 hover:bg-surface-container border border-outline-variant/30 hover:border-primary/40 px-2.5 py-1.5 rounded-full shadow-2xs text-xs font-medium text-on-surface hover:text-primary transition-all cursor-pointer">
+        <span id="backendStatusDot" class="w-2 h-2 rounded-full bg-emerald-500 shrink-0 shadow-xs"></span>
+        <span id="backendStatusText" class="text-[11px] hidden sm:inline font-mono">Backend</span>
+        <span class="material-symbols-outlined text-[14px] text-on-surface-variant">tune</span>
+      </button>
+
       <div class="inline-flex items-center gap-1.5 bg-secondary-container/60 border border-secondary/20 px-3 py-1.5 rounded-full shadow-xs text-xs font-semibold text-on-secondary-container">
         <span class="w-2 h-2 rounded-full bg-secondary animate-ping"></span>
         <span class="hidden sm:inline">Groq LPU Active</span>
@@ -521,7 +529,12 @@
           <p class="text-xs text-on-surface-variant leading-relaxed" id="noResultsMessage">
             We couldn’t find matching restaurants in this neighborhood with the specified rating and budget. Try broadening your criteria:
           </p>
-          <div class="pt-3 flex flex-col gap-2 text-left">
+          <div id="noResultsConnectionBtnWrap" class="hidden pt-2">
+            <button onclick="openBackendModal()" type="button" class="w-full p-3 bg-primary/10 hover:bg-primary/15 border border-primary/25 rounded-xl flex items-center justify-center gap-2 text-primary font-semibold text-xs transition-colors">
+              <span class="material-symbols-outlined text-[18px]">tune</span> Configure Backend API URL
+            </button>
+          </div>
+          <div class="pt-3 flex flex-col gap-2 text-left" id="relaxationButtonsWrap">
             <button class="p-3 bg-surface-container-low hover:bg-surface-container rounded-xl flex items-center justify-between text-on-surface transition-colors" onclick="relaxRating(3.8)" type="button">
               <div class="flex items-center gap-2">
                 <span class="material-symbols-outlined text-secondary text-[18px]">star_half</span>
@@ -558,6 +571,122 @@
 
 <!-- Interactive Client Application Logic -->
 <script>
+  function getEffectiveApiBase() {
+    const urlBackendParam = new URLSearchParams(window.location.search).get("backend");
+    if (urlBackendParam) {
+      localStorage.setItem("zomato_backend_url", urlBackendParam.replace(/\/$/, ""));
+    }
+    const storedBackend = localStorage.getItem("zomato_backend_url");
+    const configured = (window.__BACKEND_URL__ || "").replace(/\/$/, "");
+    if (configured) return configured;
+    if (storedBackend) return storedBackend.replace(/\/$/, "");
+    if (window.location.hostname === "localhost" && window.location.port !== "8000") {
+      return "http://127.0.0.1:8000";
+    }
+    if (window.location.protocol.startsWith("http")) {
+      return "";
+    }
+    return "http://127.0.0.1:8000";
+  }
+
+  function updateBackendUI() {
+    const apiBase = getEffectiveApiBase();
+    const displayHost = apiBase ? apiBase.replace(/^https?:\/\//, "") : "Direct / Relative";
+    const statusTextEl = document.getElementById("backendStatusText");
+    const docsLink = document.getElementById("apiDocsLink");
+    const healthLink = document.getElementById("healthStatusLink");
+
+    if (statusTextEl) statusTextEl.innerText = apiBase ? `API: ${displayHost.split("/")[0]}` : "API: Relative";
+    if (docsLink) docsLink.href = (apiBase || "") + "/docs";
+    if (healthLink) healthLink.href = (apiBase || "") + "/health";
+
+    const activeEl = document.getElementById("currentActiveBackend");
+    if (activeEl) activeEl.innerText = apiBase || window.location.origin;
+    const inputEl = document.getElementById("backendUrlInput");
+    if (inputEl && !inputEl.value) inputEl.value = apiBase;
+  }
+
+  async function checkBackendHealth() {
+    const apiBase = getEffectiveApiBase();
+    const statusDotEl = document.getElementById("backendStatusDot");
+    try {
+      const res = await fetch((apiBase || "") + "/health", { method: "GET" });
+      if (res.ok && statusDotEl) {
+        statusDotEl.className = "w-2 h-2 rounded-full bg-emerald-500 shrink-0 shadow-xs";
+      } else if (statusDotEl) {
+        statusDotEl.className = "w-2 h-2 rounded-full bg-amber-500 shrink-0 shadow-xs";
+      }
+    } catch {
+      if (statusDotEl) statusDotEl.className = "w-2 h-2 rounded-full bg-rose-500 shrink-0 shadow-xs";
+    }
+  }
+
+  function openBackendModal() {
+    const modal = document.getElementById("backendModal");
+    const input = document.getElementById("backendUrlInput");
+    const active = document.getElementById("currentActiveBackend");
+    const result = document.getElementById("backendPingResult");
+    if (modal) modal.classList.remove("hidden");
+    const apiBase = getEffectiveApiBase();
+    if (input) input.value = localStorage.getItem("zomato_backend_url") || apiBase;
+    if (active) active.innerText = apiBase || window.location.origin;
+    if (result) result.classList.add("hidden");
+  }
+
+  function closeBackendModal() {
+    const modal = document.getElementById("backendModal");
+    if (modal) modal.classList.add("hidden");
+  }
+
+  function saveBackendUrl() {
+    const input = document.getElementById("backendUrlInput");
+    const val = (input ? input.value : "").trim().replace(/\/$/, "");
+    if (val) {
+      localStorage.setItem("zomato_backend_url", val);
+    } else {
+      localStorage.removeItem("zomato_backend_url");
+    }
+    updateBackendUI();
+    checkBackendHealth();
+    closeBackendModal();
+    handleFormSubmit();
+  }
+
+  function resetBackendDefault() {
+    localStorage.removeItem("zomato_backend_url");
+    const input = document.getElementById("backendUrlInput");
+    if (input) input.value = "";
+    updateBackendUI();
+    checkBackendHealth();
+    closeBackendModal();
+    handleFormSubmit();
+  }
+
+  async function testBackendHealth() {
+    const input = document.getElementById("backendUrlInput");
+    const val = (input ? input.value : "").trim().replace(/\/$/, "");
+    const result = document.getElementById("backendPingResult");
+    if (!result) return;
+    result.classList.remove("hidden");
+    result.className = "text-xs p-2.5 rounded-lg bg-surface-container text-on-surface";
+    result.innerText = "Pinging /health endpoint...";
+
+    try {
+      const res = await fetch((val || "") + "/health");
+      if (res.ok) {
+        const data = await res.json();
+        result.className = "text-xs p-2.5 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200 font-mono";
+        result.innerText = `✓ Connected (Status: ${data.status || "ok"}, Dataset: ${data.dataset_loaded ? "Loaded" : "Loading"})`;
+      } else {
+        result.className = "text-xs p-2.5 rounded-lg bg-amber-50 text-amber-800 border border-amber-200";
+        result.innerText = `⚠ Server responded with HTTP ${res.status}`;
+      }
+    } catch (err) {
+      result.className = "text-xs p-2.5 rounded-lg bg-rose-50 text-rose-800 border border-rose-200";
+      result.innerText = `✗ Connection failed: ${err.message}`;
+    }
+  }
+
   // Initial demo recommendations to display before search
   const INITIAL_RECOMMENDATIONS = [
     {
@@ -744,13 +873,7 @@
       top_k: top_k
     };
 
-    const urlBackendParam = new URLSearchParams(window.location.search).get("backend");
-    const storedBackend = localStorage.getItem("zomato_backend_url");
-    const API_BASE = window.__BACKEND_URL__
-      || urlBackendParam
-      || storedBackend
-      || ((window.location.hostname === "localhost" && window.location.port !== "8000") ? "http://127.0.0.1:8000" : "")
-      || (window.location.protocol.startsWith("http") ? "" : "http://127.0.0.1:8000");
+    const API_BASE = getEffectiveApiBase();
 
     try {
       const res = await fetch(API_BASE + "/api/v1/recommendations", {
@@ -764,12 +887,24 @@
       }
 
       const data = await res.json();
+      const connBtn = document.getElementById("noResultsConnectionBtnWrap");
+      if (connBtn) connBtn.classList.add("hidden");
+      const relaxWrap = document.getElementById("relaxationButtonsWrap");
+      if (relaxWrap) relaxWrap.classList.remove("hidden");
+
       renderRecommendations(data.recommendations, data.metadata || {}, data.summary);
+      checkBackendHealth();
     } catch (err) {
       console.warn("Backend API call failed:", err);
       showState("no-results");
       document.getElementById("noResultsTitle").innerText = "Unable to connect to recommendation service";
       document.getElementById("noResultsMessage").innerText = `Please ensure the FastAPI server is running and accessible at ${API_BASE || window.location.origin}.`;
+      const connBtn = document.getElementById("noResultsConnectionBtnWrap");
+      if (connBtn) connBtn.classList.remove("hidden");
+      const relaxWrap = document.getElementById("relaxationButtonsWrap");
+      if (relaxWrap) relaxWrap.classList.add("hidden");
+      const statusDotEl = document.getElementById("backendStatusDot");
+      if (statusDotEl) statusDotEl.className = "w-2 h-2 rounded-full bg-rose-500 shadow-xs";
     } finally {
       document.getElementById("submitBtn").disabled = false;
     }
@@ -847,9 +982,46 @@
   window.addEventListener("DOMContentLoaded", () => {
     const range = document.getElementById("ratingRange");
     if (range) updateRatingDisplay(range.value);
+    updateBackendUI();
+    checkBackendHealth();
     handleFormSubmit();
   });
 </script>
+
+<!-- Backend Configuration Modal -->
+<div id="backendModal" class="fixed inset-0 z-[100] bg-black/50 backdrop-blur-xs hidden flex items-center justify-center p-4">
+  <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-surface-container-high animate-in fade-in zoom-in-95">
+    <div class="flex items-center justify-between mb-4">
+      <div class="flex items-center gap-2">
+        <span class="material-symbols-outlined text-primary text-xl">cloud_sync</span>
+        <h3 class="text-base font-bold font-heading">Backend API Connection</h3>
+      </div>
+      <button onclick="closeBackendModal()" class="text-on-surface-variant hover:text-on-surface p-1 rounded-lg">
+        <span class="material-symbols-outlined text-lg">close</span>
+      </button>
+    </div>
+    <p class="text-xs text-on-surface-variant mb-4 leading-relaxed">
+      Configure the FastAPI backend server URL. For Railway deployments, paste your public Railway domain (e.g. <code class="font-mono text-primary font-semibold">https://your-service.up.railway.app</code>).
+    </p>
+    <div class="space-y-3">
+      <div>
+        <label class="block text-xs font-semibold text-on-surface mb-1">FastAPI Backend URL</label>
+        <input id="backendUrlInput" type="url" placeholder="https://zomato-ai-backend.up.railway.app" class="w-full bg-surface-container-lowest border border-outline-variant/60 rounded-xl px-3 py-2 text-xs font-mono focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"/>
+      </div>
+      <div class="flex items-center justify-between text-[11px] text-on-surface-variant pt-1">
+        <span>Current: <code id="currentActiveBackend" class="font-mono text-primary font-semibold"></code></span>
+        <button type="button" onclick="testBackendHealth()" class="text-secondary hover:underline font-semibold flex items-center gap-1 cursor-pointer">
+          <span class="material-symbols-outlined text-[13px]">refresh</span> Ping /health
+        </button>
+      </div>
+      <div id="backendPingResult" class="text-xs hidden p-2.5 rounded-lg"></div>
+    </div>
+    <div class="mt-6 flex items-center justify-end gap-2">
+      <button onclick="resetBackendDefault()" class="px-3 py-1.5 text-xs text-on-surface-variant hover:text-on-surface font-medium cursor-pointer">Reset Default</button>
+      <button onclick="saveBackendUrl()" class="px-4 py-1.5 text-xs bg-primary text-white font-semibold rounded-xl hover:bg-primary/90 shadow-sm cursor-pointer">Save & Connect</button>
+    </div>
+  </div>
+</div>
 
 </body>
 </html>
